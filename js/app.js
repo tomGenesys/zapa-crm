@@ -111,6 +111,11 @@ function wireGlobalUI() {
   });
   document.getElementById("btn-notif").addEventListener("click", () => showToast("You have 3 unread notifications."));
   document.getElementById("btn-new").addEventListener("click", () => openNewMenu());
+  document.getElementById("btn-genesys").addEventListener("click", () => toggleGenesysPanel());
+  document.getElementById("genesys-panel-close").addEventListener("click", () => closeGenesysPanel());
+  window.addEventListener("resize", () => {
+    if (document.getElementById("genesys-panel").classList.contains("open")) positionGenesysPanel();
+  });
   document.getElementById("btn-avatar").addEventListener("click", () => showToast("Signed in as Thomas Prendergast"));
 
   const searchInput = document.getElementById("global-search-input");
@@ -195,13 +200,66 @@ function openNewMenu() {
 }
 
 /* ---------------- Modal ---------------- */
-function openModal(innerHtml) {
-  document.getElementById("modal-panel").innerHTML = innerHtml;
+function openModal(innerHtml, size) {
+  const panel = document.getElementById("modal-panel");
+  panel.innerHTML = innerHtml;
+  if (size) {
+    panel.style.width = size.width;
+    panel.style.height = size.height;
+  } else {
+    panel.style.width = "";
+    panel.style.height = "";
+  }
   document.getElementById("modal-overlay").classList.add("open");
 }
 function closeModal() {
   document.getElementById("modal-overlay").classList.remove("open");
-  document.getElementById("modal-panel").innerHTML = "";
+  const panel = document.getElementById("modal-panel");
+  panel.innerHTML = "";
+  panel.style.width = "";
+  panel.style.height = "";
+}
+
+/* ---------------- Genesys Cloud embed ---------------- */
+// Private Embeddable Framework deployment — served directly by Genesys Cloud,
+// not by this app. See: https://developer.genesys.cloud/platform/embeddable-framework/
+const GENESYS_EMBEDDABLE_FRAMEWORK_URL = "https://apps.inindca.com/crm/index.html?&crm=embeddableframework&dedicatedLoginWindow=true&enableFrameworkClientId=true";
+
+function toggleGenesysPanel() {
+  const panel = document.getElementById("genesys-panel");
+  if (panel.classList.contains("open")) closeGenesysPanel();
+  else openGenesysPanel();
+}
+
+function openGenesysPanel() {
+  const panel = document.getElementById("genesys-panel");
+  const body = document.getElementById("genesys-panel-body");
+  if (!body.querySelector("iframe")) {
+    const iframe = document.createElement("iframe");
+    iframe.src = GENESYS_EMBEDDABLE_FRAMEWORK_URL;
+    iframe.title = "Genesys Cloud Embeddable Framework";
+    iframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *; local-network-access *");
+    body.appendChild(iframe);
+  }
+  positionGenesysPanel();
+  panel.classList.add("open");
+}
+
+function closeGenesysPanel() {
+  document.getElementById("genesys-panel").classList.remove("open");
+}
+
+function positionGenesysPanel() {
+  const btn = document.getElementById("btn-genesys");
+  const panel = document.getElementById("genesys-panel");
+  const arrow = document.getElementById("genesys-panel-arrow");
+  const rect = btn.getBoundingClientRect();
+  const panelWidth = panel.offsetWidth || 200;
+  let left = rect.left + rect.width / 2 - panelWidth / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - panelWidth - 8));
+  panel.style.left = left + "px";
+  panel.style.top = (rect.bottom + 8) + "px";
+  arrow.style.left = (rect.left + rect.width / 2 - left - 7) + "px";
 }
 
 /* ================= HOME ================= */

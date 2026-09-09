@@ -249,6 +249,23 @@ function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
 }
 
+// Receives the relayed 'Interaction' subscription event from framework.js
+// (running inside the Genesys Cloud iframe) and screen-pops a record.
+window.addEventListener("message", event => {
+  const msg = event.data;
+  if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
+  if (msg.type === "Interaction" && msg.category === "add") {
+    screenPopLead("David Brown");
+  }
+});
+
+function screenPopLead(name) {
+  const lead = LEADS.find(l => l.name === name);
+  if (!lead) return;
+  navigate(`leads/${lead.id}`);
+  showToast(`Incoming interaction — screen pop: ${lead.name}`);
+}
+
 function positionGenesysPanel() {
   const btn = document.getElementById("btn-genesys");
   const panel = document.getElementById("genesys-panel");

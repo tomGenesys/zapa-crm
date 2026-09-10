@@ -280,13 +280,15 @@ function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
 }
 
-// Receives the relayed 'interactionSelection' Notification event from
-// framework.js (running inside the Genesys Cloud iframe) and screen-pops a
-// record when the agent selects an interaction.
+// Receives the relayed Interaction/Notification events from framework.js
+// (running inside the Genesys Cloud iframe) and screen-pops a record,
+// pushing the interaction ID into the input once there's one to push.
 window.addEventListener("message", event => {
   const msg = event.data;
   if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
-  if (msg.type === "Notification" && msg.category === "interactionSelection") {
+  const isInteractionUpdate = msg.type === "Interaction" && msg.interactionId;
+  const isInteractionSelection = msg.type === "Notification" && msg.category === "interactionSelection";
+  if (isInteractionUpdate || isInteractionSelection) {
     screenPopLead("David Brown", msg.interactionId);
   }
 });

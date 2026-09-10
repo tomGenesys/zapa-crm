@@ -280,21 +280,30 @@ function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
 }
 
-// Receives the relayed 'Interaction' subscription event from framework.js
-// (running inside the Genesys Cloud iframe) and screen-pops a record.
+// Receives the relayed 'interactionSelection' Notification event from
+// framework.js (running inside the Genesys Cloud iframe) and screen-pops a
+// record when the agent selects an interaction.
 window.addEventListener("message", event => {
   const msg = event.data;
   if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
-  if (msg.type === "Interaction" && msg.category === "add") {
-    screenPopLead("David Brown");
+  if (msg.type === "Notification" && msg.category === "interactionSelection") {
+    screenPopLead("David Brown", msg.interactionId);
   }
 });
 
-function screenPopLead(name) {
+function screenPopLead(name, interactionId) {
   const lead = LEADS.find(l => l.name === name);
   if (!lead) return;
   navigate(`leads/${lead.id}`);
   showToast(`Incoming interaction — screen pop: ${lead.name}`);
+  if (interactionId) {
+    // Wait a tick for the hashchange-triggered render to finish before the
+    // input exists in the DOM.
+    setTimeout(() => {
+      const input = document.getElementById("copilot-interaction-id");
+      if (input) input.value = interactionId;
+    }, 0);
+  }
 }
 
 function positionGenesysPanel() {
@@ -668,25 +677,24 @@ function renderLeadDetail(id) {
         <div class="field-block"><div class="field-label">Phone</div><div class="field-value">${esc(l.phone)}</div></div>
         <div class="field-block"><div class="field-label">Rating</div><div class="field-value">${ratingStars(l.rating)}</div></div>
         <div class="field-block"><div class="field-label">Owner</div><div class="field-value">${esc(l.owner)}</div></div>
-      </div>
-    </div>
-    ${l.name === "David Brown" ? `
-    <div class="card" style="width:332px;">
-      <div class="card-header"><h2>Genesys Copilot</h2></div>
-      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
-        <div class="form-row" style="margin-bottom:0;max-width:300px;">
-          <label for="copilot-interaction-id">Genesys Cloud Interaction ID</label>
+        <div class="field-block">
+          <div class="field-label">Genesys Cloud Interaction ID</div>
           <div style="display:flex;gap:6px;">
             <input type="text" id="copilot-interaction-id" placeholder="e.g. 8f2a1c3e-..." style="flex:1;"
               onkeydown="if(event.key==='Enter'){submitCopilotInteractionId('${l.id}')}"/>
             <button class="btn btn-primary btn-sm" onclick="submitCopilotInteractionId('${l.id}')">Enter</button>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="card" style="width:332px;">
+      <div class="card-header"><h2>Genesys Copilot</h2></div>
+      <div class="card-body" style="padding:0;">
         <iframe id="copilot-iframe" src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
           allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
           style="width:300px;min-height:500px;border:0;display:block;"></iframe>
       </div>
-    </div>` : ""}
+    </div>
   `;
   wireRowNav();
 }

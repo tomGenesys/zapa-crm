@@ -225,6 +225,12 @@ function closeModal() {
 // not by this app. See: https://developer.genesys.cloud/platform/embeddable-framework/
 const GENESYS_EMBEDDABLE_FRAMEWORK_URL = "https://apps.inindca.com/crm/index.html?&crm=embeddableframework&dedicatedLoginWindow=true&enableFrameworkClientId=true";
 
+// Composable Desktop component embed — https://developer.genesys.cloud/devapps/composable-desktop/set-up-the-integration
+// scope=embedded + scopeId ties the gadget instance to a specific record in our CRM.
+function composableDesktopComponentUrl(component, scopeId, size) {
+  return `https://apps.inindca.com/crm-embeddable-desktop/component.html#/${component}?size=${size || "small"}&scope=embedded&scopeId=${encodeURIComponent(scopeId)}`;
+}
+
 function toggleGenesysPanel() {
   const panel = document.getElementById("genesys-panel");
   if (panel.classList.contains("open")) closeGenesysPanel();
@@ -611,6 +617,15 @@ function renderLeadDetail(id) {
         <div class="field-block"><div class="field-label">Owner</div><div class="field-value">${esc(l.owner)}</div></div>
       </div>
     </div>
+    ${l.name === "David Brown" ? `
+    <div class="card">
+      <div class="card-header"><h2>Genesys Copilot</h2></div>
+      <div class="card-body" style="padding:0;">
+        <iframe src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
+          allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+          style="width:300px;min-height:500px;border:0;display:block;"></iframe>
+      </div>
+    </div>` : ""}
   `;
   wireRowNav();
 }

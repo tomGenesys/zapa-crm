@@ -231,6 +231,26 @@ function composableDesktopComponentUrl(component, scopeId, size) {
   return `https://apps.inindca.com/crm-embeddable-desktop/component.html#/${component}?size=${size || "small"}&scope=embedded&scopeId=${encodeURIComponent(scopeId)}`;
 }
 
+// SET_INTERACTION — sent by the host app directly into the component iframe.
+// https://developer.genesys.cloud/devapps/composable-desktop/requests-responses/set-interaction
+function submitCopilotInteractionId(scopeId) {
+  const input = document.getElementById("copilot-interaction-id");
+  const interactionId = input.value.trim();
+  if (!interactionId) return;
+  const iframe = document.getElementById("copilot-iframe");
+  if (!iframe || !iframe.contentWindow) return;
+  iframe.contentWindow.postMessage({
+    type: "Genesys.ComposableDesktop.SET_INTERACTION",
+    data: {
+      componentId: "zapa-crm-copilot",
+      scope: "embedded",
+      id: scopeId,
+      interactionId: interactionId,
+    },
+  }, "https://apps.inindca.com");
+  showToast(`Sent interaction ${interactionId} to Genesys Copilot.`);
+}
+
 function toggleGenesysPanel() {
   const panel = document.getElementById("genesys-panel");
   if (panel.classList.contains("open")) closeGenesysPanel();
@@ -620,8 +640,16 @@ function renderLeadDetail(id) {
     ${l.name === "David Brown" ? `
     <div class="card">
       <div class="card-header"><h2>Genesys Copilot</h2></div>
-      <div class="card-body" style="padding:0;">
-        <iframe src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-row" style="margin-bottom:0;max-width:300px;">
+          <label for="copilot-interaction-id">Genesys Cloud Interaction ID</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="copilot-interaction-id" placeholder="e.g. 8f2a1c3e-..." style="flex:1;"
+              onkeydown="if(event.key==='Enter'){submitCopilotInteractionId('${l.id}')}"/>
+            <button class="btn btn-primary btn-sm" onclick="submitCopilotInteractionId('${l.id}')">Enter</button>
+          </div>
+        </div>
+        <iframe id="copilot-iframe" src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
           allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
           style="width:300px;min-height:500px;border:0;display:block;"></iframe>
       </div>

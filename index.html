@@ -57,6 +57,23 @@
     </button>
   </header>
 
+  <!-- Composable Desktop Broker popover — toggled from the TP avatar icon.
+       The iframe stays mounted (even while hidden) so it keeps sharing one
+       authenticated session with all Composable Desktop components (e.g. the
+       Copilot gadget), the same way the Genesys Cloud popover works. -->
+  <div class="genesys-broker" id="genesys-broker">
+    <div class="genesys-broker-arrow" id="genesys-broker-arrow"></div>
+    <div class="genesys-broker-header">
+      <h2>Genesys Broker</h2>
+      <button class="genesys-broker-close" id="genesys-broker-close" title="Close">&times;</button>
+    </div>
+    <div class="genesys-broker-body">
+      <iframe id="genesys-broker-iframe" title="Genesys Cloud Broker"
+        src="https://apps.inindca.com/crm-embeddable-desktop/?show-broker-ui"
+        allow="camera *; microphone *; autoplay *; hid *; local-network-access *"></iframe>
+    </div>
+  </div>
+
   <!-- Genesys Cloud popover panel -->
   <div class="genesys-panel" id="genesys-panel">
     <div class="genesys-panel-arrow" id="genesys-panel-arrow"></div>

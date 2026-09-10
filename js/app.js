@@ -116,7 +116,11 @@ function wireGlobalUI() {
   window.addEventListener("resize", () => {
     if (document.getElementById("genesys-panel").classList.contains("open")) positionGenesysPanel();
   });
-  document.getElementById("btn-avatar").addEventListener("click", () => showToast("Signed in as Thomas Prendergast"));
+  document.getElementById("btn-avatar").addEventListener("click", () => toggleBrokerPanel());
+  document.getElementById("genesys-broker-close").addEventListener("click", () => closeBrokerPanel());
+  window.addEventListener("resize", () => {
+    if (document.getElementById("genesys-broker").classList.contains("open")) positionBrokerPanel();
+  });
 
   const searchInput = document.getElementById("global-search-input");
   searchInput.addEventListener("input", () => renderGlobalSearchResults(searchInput.value));
@@ -269,6 +273,7 @@ function openGenesysPanel() {
   }
   positionGenesysPanel();
   panel.classList.add("open");
+  screenPopLead("David Brown");
 }
 
 function closeGenesysPanel() {
@@ -298,6 +303,34 @@ function positionGenesysPanel() {
   const arrow = document.getElementById("genesys-panel-arrow");
   const rect = btn.getBoundingClientRect();
   const panelWidth = panel.offsetWidth || 200;
+  let left = rect.left + rect.width / 2 - panelWidth / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - panelWidth - 8));
+  panel.style.left = left + "px";
+  panel.style.top = (rect.bottom + 8) + "px";
+  arrow.style.left = (rect.left + rect.width / 2 - left - 7) + "px";
+}
+
+function toggleBrokerPanel() {
+  const panel = document.getElementById("genesys-broker");
+  if (panel.classList.contains("open")) closeBrokerPanel();
+  else openBrokerPanel();
+}
+
+function openBrokerPanel() {
+  positionBrokerPanel();
+  document.getElementById("genesys-broker").classList.add("open");
+}
+
+function closeBrokerPanel() {
+  document.getElementById("genesys-broker").classList.remove("open");
+}
+
+function positionBrokerPanel() {
+  const btn = document.getElementById("btn-avatar");
+  const panel = document.getElementById("genesys-broker");
+  const arrow = document.getElementById("genesys-broker-arrow");
+  const rect = btn.getBoundingClientRect();
+  const panelWidth = panel.offsetWidth || 260;
   let left = rect.left + rect.width / 2 - panelWidth / 2;
   left = Math.max(8, Math.min(left, window.innerWidth - panelWidth - 8));
   panel.style.left = left + "px";
@@ -638,7 +671,7 @@ function renderLeadDetail(id) {
       </div>
     </div>
     ${l.name === "David Brown" ? `
-    <div class="card">
+    <div class="card" style="width:332px;">
       <div class="card-header"><h2>Genesys Copilot</h2></div>
       <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
         <div class="form-row" style="margin-bottom:0;max-width:300px;">

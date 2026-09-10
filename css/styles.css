@@ -348,6 +348,49 @@ table.data-table tr:hover td { background: #f7f9fc; }
 
 .rating-star { color: #f4bc44; }
 
+/* ============ Composable Desktop Broker popover (shared auth) ============ */
+.genesys-broker {
+  position: fixed;
+  width: 260px;
+  height: 400px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  z-index: 150;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.genesys-broker.open { display: flex; }
+.genesys-broker-arrow {
+  position: absolute;
+  top: -6px;
+  width: 14px;
+  height: 14px;
+  background: var(--sf-header-bg);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.genesys-broker-header {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  background: linear-gradient(180deg, var(--sf-header-bg) 0%, var(--sf-header-bg-2) 100%);
+  color: #fff;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.genesys-broker-header h2 { margin: 0; font-size: 14px; font-weight: 700; }
+.genesys-broker-close {
+  background: transparent; border: none; color: #fff; font-size: 16px; line-height: 1;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px;
+}
+.genesys-broker-close:hover { background: rgba(255,255,255,.15); }
+.genesys-broker-body { flex: 1 1 auto; }
+.genesys-broker-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+
 /* ============ Genesys Cloud popover panel ============ */
 .genesys-panel {
   position: fixed;

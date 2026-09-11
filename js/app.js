@@ -241,12 +241,14 @@ function submitCopilotInteractionId(scopeId) {
   const input = document.getElementById("copilot-interaction-id");
   const interactionId = input.value.trim();
   if (!interactionId) return;
-  const iframe = document.getElementById("copilot-iframe");
-  if (!iframe || !iframe.contentWindow) return;
-  // Real traffic from this component (its own GET_INTERACTION_ID requests)
-  // uses a bare type string, not the "Genesys.ComposableDesktop." prefix
-  // shown in the docs — match that.
-  iframe.contentWindow.postMessage({
+  // EXPERIMENTAL: the component's own logs show a shared cache
+  // (interaction-manager-service) that's populated via the Broker, not the
+  // component iframe directly — "A broker is a centralized service that
+  // manages all communication between embedded components and Genesys
+  // Cloud." Target the Broker iframe instead of #copilot-iframe.
+  const broker = document.getElementById("genesys-broker-iframe");
+  if (!broker || !broker.contentWindow) return;
+  broker.contentWindow.postMessage({
     type: "SET_INTERACTION",
     data: {
       componentId: "zapa-crm-copilot",

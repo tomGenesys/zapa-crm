@@ -243,8 +243,11 @@ function submitCopilotInteractionId(scopeId) {
   if (!interactionId) return;
   const iframe = document.getElementById("copilot-iframe");
   if (!iframe || !iframe.contentWindow) return;
+  // Real traffic from this component (its own GET_INTERACTION_ID requests)
+  // uses a bare type string, not the "Genesys.ComposableDesktop." prefix
+  // shown in the docs — match that.
   iframe.contentWindow.postMessage({
-    type: "Genesys.ComposableDesktop.SET_INTERACTION",
+    type: "SET_INTERACTION",
     data: {
       componentId: "zapa-crm-copilot",
       scope: "embedded",

@@ -71,6 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
   renderLauncher();
   render();
   wireGlobalUI();
+  renderMessageLog();
 });
 
 function renderTabBar() {
@@ -132,6 +133,49 @@ function wireGlobalUI() {
   document.getElementById("modal-overlay").addEventListener("click", e => {
     if (e.target.id === "modal-overlay") closeModal();
   });
+
+  document.getElementById("message-log-toggle").addEventListener("click", () => {
+    document.getElementById("message-log").classList.toggle("open");
+  });
+  document.getElementById("message-log-clear").addEventListener("click", e => {
+    e.stopPropagation();
+    messageLog.length = 0;
+    renderMessageLog();
+  });
+}
+
+/* ---------------- Message Log ---------------- */
+const messageLog = [];
+
+function logMessage(direction, data) {
+  messageLog.push({ time: new Date(), direction, data });
+  if (messageLog.length > 200) messageLog.shift();
+  renderMessageLog();
+}
+
+function renderMessageLog() {
+  const body = document.getElementById("message-log-body");
+  const count = document.getElementById("message-log-count");
+  count.textContent = messageLog.length;
+  if (messageLog.length === 0) {
+    body.innerHTML = `<div class="message-log-empty">No messages yet — sent/received postMessage traffic with the Genesys panels will appear here.</div>`;
+    return;
+  }
+  body.innerHTML = messageLog.slice().reverse().map(entry => `
+    <div class="message-log-entry">
+      <span class="message-log-time">${entry.time.toLocaleTimeString()}</span>
+      <span class="message-log-dir ${entry.direction}">${entry.direction === "sent" ? "→ SENT" : "← RECEIVED"}</span>
+      <span class="message-log-json">${esc(safeStringify(entry.data))}</span>
+    </div>`).join("");
+  body.scrollTop = 0;
+}
+
+function safeStringify(data) {
+  try {
+    return JSON.stringify(data);
+  } catch (e) {
+    return String(data);
+  }
 }
 
 function renderLauncher() {
@@ -248,7 +292,7 @@ function submitCopilotInteractionId(scopeId) {
   // Cloud." Target the Broker iframe instead of #copilot-iframe.
   const broker = document.getElementById("genesys-broker-iframe");
   if (!broker || !broker.contentWindow) return;
-  broker.contentWindow.postMessage({
+  const payload = {
     type: "SET_INTERACTION",
     data: {
       componentId: "zapa-crm-copilot",
@@ -256,7 +300,9 @@ function submitCopilotInteractionId(scopeId) {
       id: scopeId,
       interactionId: interactionId,
     },
-  }, "https://apps.inindca.com");
+  };
+  broker.contentWindow.postMessage(payload, "https://apps.inindca.com");
+  logMessage("sent", payload);
   showToast(`Sent interaction ${interactionId} to Genesys Copilot.`);
 }
 
@@ -290,6 +336,7 @@ function closeGenesysPanel() {
 // pushing the interaction ID into the input once there's one to push.
 window.addEventListener("message", event => {
   const msg = event.data;
+  logMessage("received", msg);
   if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
   const isInteractionUpdate = msg.type === "Interaction" && msg.interactionId;
   const isInteractionSelection = msg.type === "Notification" && msg.category === "interactionSelection";

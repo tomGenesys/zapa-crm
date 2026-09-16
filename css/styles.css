@@ -433,3 +433,51 @@ table.data-table tr:hover td { background: #f7f9fc; }
 .genesys-panel-close:hover { background: rgba(255,255,255,.15); }
 .genesys-panel-body { flex: 1 1 auto; }
 .genesys-panel-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* ============ Message Log (footer) ============ */
+.message-log {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--sf-border);
+  background: #fff;
+  z-index: 120;
+}
+.message-log-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 34px;
+  padding: 0 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.message-log-header:hover { background: #f7f7f7; }
+.message-log-title { font-size: 12px; font-weight: 700; color: var(--sf-text); }
+.message-log-count {
+  background: var(--sf-blue-light); color: var(--sf-blue-dark);
+  font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px;
+}
+.message-log-clear {
+  margin-left: auto;
+  border: 1px solid var(--sf-border); background: #fff; color: var(--sf-text-secondary);
+  font-size: 11px; padding: 2px 10px; border-radius: 4px;
+}
+.message-log-clear:hover { background: #f3f3f3; }
+.message-log-chevron { font-size: 10px; color: var(--sf-text-secondary); transition: transform .15s ease; }
+.message-log.open .message-log-chevron { transform: rotate(180deg); }
+.message-log-body {
+  display: none;
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid var(--sf-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11.5px;
+}
+.message-log.open .message-log-body { display: block; }
+.message-log-entry { display: flex; gap: 8px; padding: 6px 14px; border-bottom: 1px solid #f1f0f0; align-items: flex-start; }
+.message-log-entry:hover { background: #fafafa; }
+.message-log-time { color: var(--sf-text-secondary); flex: 0 0 auto; white-space: nowrap; }
+.message-log-dir { flex: 0 0 auto; font-weight: 700; border-radius: 3px; padding: 0 6px; white-space: nowrap; }
+.message-log-dir.sent { background: var(--sf-success-bg); color: var(--sf-success); }
+.message-log-dir.received { background: var(--sf-blue-light); color: var(--sf-blue-dark); }
+.message-log-json { flex: 1 1 auto; white-space: pre-wrap; word-break: break-all; color: var(--sf-text); }
+.message-log-empty { padding: 14px; color: var(--sf-text-secondary); font-size: 12px; text-align: center; }

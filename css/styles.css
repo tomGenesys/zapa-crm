@@ -479,5 +479,6 @@ table.data-table tr:hover td { background: #f7f9fc; }
 .message-log-dir { flex: 0 0 auto; font-weight: 700; border-radius: 3px; padding: 0 6px; white-space: nowrap; }
 .message-log-dir.sent { background: var(--sf-success-bg); color: var(--sf-success); }
 .message-log-dir.received { background: var(--sf-blue-light); color: var(--sf-blue-dark); }
+.message-log-repeat { flex: 0 0 auto; font-weight: 700; color: var(--sf-text-secondary); background: #f1f0f0; border-radius: 3px; padding: 0 5px; }
 .message-log-json { flex: 1 1 auto; white-space: pre-wrap; word-break: break-all; color: var(--sf-text); }
 .message-log-empty { padding: 14px; color: var(--sf-text-secondary); font-size: 12px; text-align: center; }

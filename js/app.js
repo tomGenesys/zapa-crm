@@ -147,9 +147,36 @@ function wireGlobalUI() {
 /* ---------------- Message Log ---------------- */
 const messageLog = [];
 
+// Fields that change on every occurrence of an otherwise-identical message
+// (e.g. a fresh correlation ID per request) — ignored when deciding whether
+// two log entries are "the same" for collapsing purposes.
+const VOLATILE_LOG_FIELDS = new Set(["contextId"]);
+
+function stripVolatile(value) {
+  if (Array.isArray(value)) return value.map(stripVolatile);
+  if (value && typeof value === "object") {
+    const copy = {};
+    for (const k in value) {
+      if (VOLATILE_LOG_FIELDS.has(k)) continue;
+      copy[k] = stripVolatile(value[k]);
+    }
+    return copy;
+  }
+  return value;
+}
+
 function logMessage(direction, data) {
-  messageLog.push({ time: new Date(), direction, data });
-  if (messageLog.length > 200) messageLog.shift();
+  const json = safeStringify(data);
+  const dedupKey = safeStringify(stripVolatile(data));
+  const last = messageLog[messageLog.length - 1];
+  if (last && last.direction === direction && last.dedupKey === dedupKey) {
+    last.count += 1;
+    last.time = new Date();
+    last.json = json;
+  } else {
+    messageLog.push({ time: new Date(), direction, data, json, dedupKey, count: 1 });
+    if (messageLog.length > 200) messageLog.shift();
+  }
   renderMessageLog();
 }
 
@@ -165,7 +192,8 @@ function renderMessageLog() {
     <div class="message-log-entry">
       <span class="message-log-time">${entry.time.toLocaleTimeString()}</span>
       <span class="message-log-dir ${entry.direction}">${entry.direction === "sent" ? "→ SENT" : "← RECEIVED"}</span>
-      <span class="message-log-json">${esc(safeStringify(entry.data))}</span>
+      ${entry.count > 1 ? `<span class="message-log-repeat">×${entry.count}</span>` : ""}
+      <span class="message-log-json">${esc(entry.json)}</span>
     </div>`).join("");
   body.scrollTop = 0;
 }

@@ -845,15 +845,28 @@ function renderLeadDetail(id) {
             style="width:300px;min-height:500px;border:0;display:block;"></iframe>
         </div>
       </div>
-      <div class="card collapsible-card collapsed" id="email-gadget-card" style="width:800px;">
-        <div class="card-header" onclick="toggleCollapsibleCard('email-gadget-card')">
-          <h2>Genesys Email</h2>
-          <span class="collapsible-chevron">&#9650;</span>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div class="card collapsible-card collapsed" id="email-gadget-card" style="width:800px;">
+          <div class="card-header" onclick="toggleCollapsibleCard('email-gadget-card')">
+            <h2>Genesys Email</h2>
+            <span class="collapsible-chevron">&#9650;</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <iframe id="email-iframe" src="${composableDesktopComponentUrl("email", l.id, "small")}" title="Genesys Cloud Email"
+              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
+          </div>
         </div>
-        <div class="card-body" style="padding:0;">
-          <iframe id="email-iframe" src="${composableDesktopComponentUrl("email", l.id, "small")}" title="Genesys Cloud Email"
-            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
-            style="width:800px;min-height:500px;border:0;display:block;"></iframe>
+        <div class="card collapsible-card collapsed" id="messenger-gadget-card" style="width:800px;">
+          <div class="card-header" onclick="toggleCollapsibleCard('messenger-gadget-card')">
+            <h2>Genesys Messenger</h2>
+            <span class="collapsible-chevron">&#9650;</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <iframe id="messenger-iframe" src="${composableDesktopComponentUrl("messaging", l.id, "small")}" title="Genesys Cloud Messenger"
+              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
+          </div>
         </div>
       </div>
     </div>

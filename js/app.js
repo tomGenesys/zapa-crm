@@ -836,7 +836,7 @@ function renderLeadDetail(id) {
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
       <div class="card" style="width:332px;">
         <div class="card-header"><h2>Genesys Copilot</h2></div>
         <div class="card-body" style="padding:0;">
@@ -845,7 +845,7 @@ function renderLeadDetail(id) {
             style="width:300px;min-height:500px;border:0;display:block;"></iframe>
         </div>
       </div>
-      <div class="card collapsible-card" id="email-gadget-card" style="width:462px;">
+      <div class="card collapsible-card collapsed" id="email-gadget-card" style="width:800px;">
         <div class="card-header" onclick="toggleCollapsibleCard('email-gadget-card')">
           <h2>Genesys Email</h2>
           <span class="collapsible-chevron">&#9650;</span>
@@ -853,7 +853,7 @@ function renderLeadDetail(id) {
         <div class="card-body" style="padding:0;">
           <iframe id="email-iframe" src="${composableDesktopComponentUrl("email", l.id, "small")}" title="Genesys Cloud Email"
             allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
-            style="width:430px;min-height:500px;border:0;display:block;"></iframe>
+            style="width:800px;min-height:500px;border:0;display:block;"></iframe>
         </div>
       </div>
     </div>

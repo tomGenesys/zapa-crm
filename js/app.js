@@ -322,8 +322,11 @@ function extractInteractionIdFromInput(value) {
 // SET_INTERACTION from an unregistered sender. Matches the official example:
 // https://github.com/MyPureCloud/crm-composable-desktop-examples/blob/main/gadget-quickstart.html
 //   GET_STATUS -> STATUS_UPDATE(contextId: "handshake"|"initial") -> REGISTRATION_REQUEST -> REGISTRATION_RESPONSE
-const COMPOSABLE_DESKTOP_COMPONENT_ID = "zapa-crm-copilot";
-const COMPOSABLE_DESKTOP_COMPONENT_NAME = "ZAPA_CRM_COMPOSABLE_DESKTOP";
+// "name" is not a free-choice label — the Broker only accepts the fixed,
+// whitelisted external integration name "GENESYS_CLOUD_COMPOSABLE_DESKTOP";
+// any other name is silently rejected (no REGISTRATION_RESPONSE at all).
+const COMPOSABLE_DESKTOP_COMPONENT_ID = "12";
+const COMPOSABLE_DESKTOP_COMPONENT_NAME = "GENESYS_CLOUD_COMPOSABLE_DESKTOP";
 let composableDesktopRegistered = false;
 
 function getBrokerWindow() {

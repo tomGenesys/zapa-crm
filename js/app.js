@@ -72,6 +72,10 @@ window.addEventListener("DOMContentLoaded", () => {
   render();
   wireGlobalUI();
   renderMessageLog();
+  // Kick off the Composable Desktop registration handshake as soon as the
+  // Broker iframe (mounted in the page HTML) has loaded.
+  const broker = document.getElementById("genesys-broker-iframe");
+  if (broker) broker.addEventListener("load", composableDesktopGetStatus);
 });
 
 function renderTabBar() {
@@ -307,8 +311,6 @@ function composableDesktopComponentUrl(component, scopeId, size) {
   return `https://apps.inindca.com/crm-embeddable-desktop/component.html#/${component}?size=${size || "small"}&scope=embedded&scopeId=${encodeURIComponent(scopeId)}`;
 }
 
-// SET_INTERACTION — sent by the host app directly into the component iframe.
-// https://developer.genesys.cloud/devapps/composable-desktop/requests-responses/set-interaction
 // If a full URL got pasted in (e.g. copied from the Genesys Cloud UI),
 // pull out the trailing GUID instead of sending the whole URL as the ID.
 function extractInteractionIdFromInput(value) {
@@ -316,28 +318,59 @@ function extractInteractionIdFromInput(value) {
   return match ? match[0].trim() : value;
 }
 
+// Composable Desktop registration handshake — the Broker won't act on
+// SET_INTERACTION from an unregistered sender. Matches the official example:
+// https://github.com/MyPureCloud/crm-composable-desktop-examples/blob/main/gadget-quickstart.html
+//   GET_STATUS -> STATUS_UPDATE(contextId: "handshake"|"initial") -> REGISTRATION_REQUEST -> REGISTRATION_RESPONSE
+const COMPOSABLE_DESKTOP_COMPONENT_ID = "zapa-crm-copilot";
+const COMPOSABLE_DESKTOP_COMPONENT_NAME = "ZAPA_CRM_COMPOSABLE_DESKTOP";
+let composableDesktopRegistered = false;
+
+function getBrokerWindow() {
+  const broker = document.getElementById("genesys-broker-iframe");
+  return broker && broker.contentWindow;
+}
+
+// Messages TO the Broker are sent as plain objects (not JSON strings) —
+// confirmed against Genesys's own example code.
+function postToBroker(type, data) {
+  const broker = getBrokerWindow();
+  if (!broker) return;
+  const payload = { type, data };
+  broker.postMessage(payload, "https://apps.inindca.com");
+  logMessage("sent", payload);
+}
+
+function composableDesktopGetStatus() {
+  postToBroker("Genesys.ComposableDesktop.GET_STATUS", {
+    componentId: COMPOSABLE_DESKTOP_COMPONENT_ID,
+    contextId: "handshake",
+  });
+}
+
+function composableDesktopRegister() {
+  postToBroker("Genesys.ComposableDesktop.REGISTRATION_REQUEST", {
+    componentId: COMPOSABLE_DESKTOP_COMPONENT_ID,
+    name: COMPOSABLE_DESKTOP_COMPONENT_NAME,
+  });
+}
+
 function submitCopilotInteractionId(scopeId) {
   const input = document.getElementById("copilot-interaction-id");
   const interactionId = extractInteractionIdFromInput(input.value.trim());
   if (!interactionId) return;
   input.value = interactionId;
-  const broker = document.getElementById("genesys-broker-iframe");
-  if (!broker || !broker.contentWindow) return;
-  // The Broker's SET_INTERACTION handler is registered under the
-  // namespaced type "Genesys.ComposableDesktop.SET_INTERACTION" — a bare
-  // "SET_INTERACTION" type is never matched and gets silently dropped.
-  const payload = {
-    type: "Genesys.ComposableDesktop.SET_INTERACTION",
-    data: {
-      contextId: crypto.randomUUID(),
-      componentId: "zapa-crm-copilot",
-      scope: "embedded",
-      id: scopeId,
-      interactionId: interactionId,
-    },
-  };
-  broker.contentWindow.postMessage(JSON.stringify(payload), "https://apps.inindca.com");
-  logMessage("sent", payload);
+  if (!composableDesktopRegistered) {
+    showToast("Still connecting to Genesys Cloud — retrying, try Enter again in a second.");
+    composableDesktopGetStatus();
+    return;
+  }
+  postToBroker("Genesys.ComposableDesktop.SET_INTERACTION", {
+    componentId: COMPOSABLE_DESKTOP_COMPONENT_ID,
+    scope: "embedded",
+    id: scopeId,
+    interactionId: interactionId,
+  });
   showToast(`Sent interaction ${interactionId} to Genesys Copilot.`);
 }
 
@@ -377,6 +410,17 @@ window.addEventListener("message", event => {
     try { msg = JSON.parse(msg); } catch (e) { /* not JSON — leave as string */ }
   }
   logMessage("received", msg);
+
+  if (msg && typeof msg.type === "string" && msg.type.startsWith("Genesys.ComposableDesktop")) {
+    if (msg.type === "Genesys.ComposableDesktop.REGISTRATION_RESPONSE") {
+      composableDesktopRegistered = true;
+    } else if (msg.type === "Genesys.ComposableDesktop.STATUS_UPDATE") {
+      const contextId = msg.data && msg.data.contextId;
+      if (contextId === "handshake" || contextId === "initial") {
+        composableDesktopRegister();
+      }
+    }
+  }
 
   if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
   const isInteractionUpdate = msg.type === "Interaction" && msg.interactionId;

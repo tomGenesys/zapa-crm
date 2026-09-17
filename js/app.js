@@ -95,9 +95,55 @@ function renderTabBar() {
   });
 }
 
-function render() {
-  renderTabBar();
+// One record tab opens each time a Lead is visited, staying open (like a
+// browser tab) until closed, so the user can jump back between leads.
+let leadTabs = [];
+
+function renderLeadTabBar() {
+  const bar = document.getElementById("lead-tab-bar");
+  if (!bar) return;
+  bar.classList.toggle("has-tabs", leadTabs.length > 0);
+  if (leadTabs.length === 0) { bar.innerHTML = ""; return; }
   const { page, id } = currentRoute();
+  bar.innerHTML = leadTabs.map(t => `
+    <div class="lead-tab-item ${page === "leads" && id === t.id ? "active" : ""}" data-lead-tab="${t.id}">
+      <span>${esc(t.name)}</span>
+      <button class="lead-tab-close" data-close-lead-tab="${t.id}" title="Close">&times;</button>
+    </div>`).join("");
+  bar.querySelectorAll("[data-lead-tab]").forEach(el => {
+    el.addEventListener("click", e => {
+      if (e.target.closest("[data-close-lead-tab]")) return;
+      navigate(`leads/${el.dataset.leadTab}`);
+    });
+  });
+  bar.querySelectorAll("[data-close-lead-tab]").forEach(el => {
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      closeLeadTab(el.dataset.closeLeadTab);
+    });
+  });
+}
+
+function closeLeadTab(id) {
+  const idx = leadTabs.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  leadTabs.splice(idx, 1);
+  const { page, id: currentId } = currentRoute();
+  if (page === "leads" && currentId === id) {
+    navigate(leadTabs.length ? `leads/${leadTabs[leadTabs.length - 1].id}` : "leads");
+  } else {
+    renderLeadTabBar();
+  }
+}
+
+function render() {
+  const { page, id } = currentRoute();
+  if (page === "leads" && id) {
+    const lead = LEADS.find(l => l.id === id);
+    if (lead && !leadTabs.some(t => t.id === id)) leadTabs.push({ id: lead.id, name: lead.name });
+  }
+  renderTabBar();
+  renderLeadTabBar();
   const main = document.getElementById("main-content");
   main.scrollTop = 0;
   switch (page) {

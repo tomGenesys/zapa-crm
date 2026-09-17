@@ -168,6 +168,40 @@ a:hover { text-decoration: underline; }
 .tab-item:hover { background: #f3f3f3; color: var(--sf-text); cursor: pointer; }
 .tab-item.active { color: var(--sf-blue-dark); border-bottom-color: var(--sf-blue); background: #f3f8fd; }
 
+/* ============ Lead record tabs ============ */
+.lead-tab-bar {
+  background: #f3f3f3;
+  border-bottom: 1px solid var(--sf-border);
+  display: none;
+  align-items: stretch;
+  height: 34px;
+  padding-left: 8px;
+  overflow-x: auto;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+.lead-tab-bar.has-tabs { display: flex; }
+.lead-tab-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 8px 0 12px;
+  color: var(--sf-text-secondary);
+  font-size: 12px; font-weight: 600;
+  background: #fff;
+  border: 1px solid var(--sf-border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  margin-top: 4px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lead-tab-item:hover { color: var(--sf-text); }
+.lead-tab-item.active { color: var(--sf-blue-dark); background: #fff; box-shadow: 0 -2px 0 var(--sf-blue) inset; }
+.lead-tab-close {
+  border: none; background: transparent; color: inherit; opacity: .6;
+  font-size: 14px; line-height: 1; padding: 2px 4px; border-radius: 3px;
+}
+.lead-tab-close:hover { opacity: 1; background: #eee; }
+
 /* ============ Main content ============ */
 .main-content { flex: 1 1 auto; overflow-y: auto; padding: 16px 20px 40px; }
 .page-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }

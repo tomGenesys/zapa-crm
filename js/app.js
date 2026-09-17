@@ -54,6 +54,11 @@ function showToast(message, type = "success") {
   setTimeout(() => el.remove(), 3200);
 }
 
+function toggleCollapsibleCard(id) {
+  const card = document.getElementById(id);
+  if (card) card.classList.toggle("collapsed");
+}
+
 /* ---------------- Router ---------------- */
 function currentRoute() {
   const hash = location.hash.replace(/^#\/?/, "");
@@ -368,13 +373,16 @@ function submitCopilotInteractionId(scopeId) {
     composableDesktopGetStatus();
     return;
   }
+  // scope="embedded" + id=scopeId is a shared cache key on the Broker's
+  // side — one SET_INTERACTION here reaches every embedded gadget scoped
+  // to this same lead (Copilot and Email), no per-gadget targeting needed.
   postToBroker("Genesys.ComposableDesktop.SET_INTERACTION", {
     componentId: COMPOSABLE_DESKTOP_COMPONENT_ID,
     scope: "embedded",
     id: scopeId,
     interactionId: interactionId,
   });
-  showToast(`Sent interaction ${interactionId} to Genesys Copilot.`);
+  showToast(`Sent interaction ${interactionId} to Genesys Copilot and Email.`);
 }
 
 function toggleGenesysPanel() {
@@ -828,12 +836,25 @@ function renderLeadDetail(id) {
         </div>
       </div>
     </div>
-    <div class="card" style="width:332px;">
-      <div class="card-header"><h2>Genesys Copilot</h2></div>
-      <div class="card-body" style="padding:0;">
-        <iframe id="copilot-iframe" src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
-          allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
-          style="width:300px;min-height:500px;border:0;display:block;"></iframe>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div class="card" style="width:332px;">
+        <div class="card-header"><h2>Genesys Copilot</h2></div>
+        <div class="card-body" style="padding:0;">
+          <iframe id="copilot-iframe" src="${composableDesktopComponentUrl("copilot", l.id, "small")}" title="Genesys Cloud Copilot"
+            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+            style="width:300px;min-height:500px;border:0;display:block;"></iframe>
+        </div>
+      </div>
+      <div class="card collapsible-card" id="email-gadget-card" style="width:462px;">
+        <div class="card-header" onclick="toggleCollapsibleCard('email-gadget-card')">
+          <h2>Genesys Email</h2>
+          <span class="collapsible-chevron">&#9650;</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <iframe id="email-iframe" src="${composableDesktopComponentUrl("email", l.id, "small")}" title="Genesys Cloud Email"
+            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+            style="width:430px;min-height:500px;border:0;display:block;"></iframe>
+        </div>
       </div>
     </div>
   `;

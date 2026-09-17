@@ -213,6 +213,11 @@ a:hover { text-decoration: underline; }
 .card-header h2 { font-size: 14px; margin: 0; font-weight: 700; }
 .card-body { padding: 14px 16px; }
 
+.collapsible-card .card-header { cursor: pointer; user-select: none; }
+.collapsible-chevron { font-size: 10px; color: var(--sf-text-secondary); transition: transform .15s ease; }
+.collapsible-card.collapsed .collapsible-chevron { transform: rotate(180deg); }
+.collapsible-card.collapsed .card-body { display: none; }
+
 .dashboard-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
 @media (max-width: 1000px) { .dashboard-grid { grid-template-columns: 1fr; } }
 

@@ -309,10 +309,18 @@ function composableDesktopComponentUrl(component, scopeId, size) {
 
 // SET_INTERACTION — sent by the host app directly into the component iframe.
 // https://developer.genesys.cloud/devapps/composable-desktop/requests-responses/set-interaction
+// If a full URL got pasted in (e.g. copied from the Genesys Cloud UI),
+// pull out the trailing GUID instead of sending the whole URL as the ID.
+function extractInteractionIdFromInput(value) {
+  const match = value.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\s*$/i);
+  return match ? match[0].trim() : value;
+}
+
 function submitCopilotInteractionId(scopeId) {
   const input = document.getElementById("copilot-interaction-id");
-  const interactionId = input.value.trim();
+  const interactionId = extractInteractionIdFromInput(input.value.trim());
   if (!interactionId) return;
+  input.value = interactionId;
   // EXPERIMENTAL: the component's own logs show a shared cache
   // (interaction-manager-service) that's populated via the Broker, not the
   // component iframe directly — "A broker is a centralized service that
@@ -377,7 +385,6 @@ function screenPopLead(name, interactionId) {
   const lead = LEADS.find(l => l.name === name);
   if (!lead) return;
   navigate(`leads/${lead.id}`);
-  showToast(`Incoming interaction — screen pop: ${lead.name}`);
   if (interactionId) {
     // Wait a tick for the hashchange-triggered render to finish before the
     // input exists in the DOM.

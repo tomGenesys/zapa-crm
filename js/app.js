@@ -316,34 +316,28 @@ function extractInteractionIdFromInput(value) {
   return match ? match[0].trim() : value;
 }
 
-// Copilot polls its host with GET_INTERACTION_ID ({contextId, scope, id})
-// roughly once a second, over the wire as a JSON *string* (not a raw
-// object — see the message listener below). Track the last interaction ID
-// submitted per scopeId so we can answer that poll directly.
-const copilotInteractionIds = {};
-
 function submitCopilotInteractionId(scopeId) {
   const input = document.getElementById("copilot-interaction-id");
   const interactionId = extractInteractionIdFromInput(input.value.trim());
   if (!interactionId) return;
   input.value = interactionId;
-  copilotInteractionIds[scopeId] = interactionId;
-  // Keep pushing SET_INTERACTION to the Broker too, in case it's also
-  // listened for — matching the Broker's own wire format (stringified JSON).
   const broker = document.getElementById("genesys-broker-iframe");
-  if (broker && broker.contentWindow) {
-    const payload = {
-      type: "SET_INTERACTION",
-      data: {
-        componentId: "zapa-crm-copilot",
-        scope: "embedded",
-        id: scopeId,
-        interactionId: interactionId,
-      },
-    };
-    broker.contentWindow.postMessage(JSON.stringify(payload), "https://apps.inindca.com");
-    logMessage("sent", payload);
-  }
+  if (!broker || !broker.contentWindow) return;
+  // The Broker's SET_INTERACTION handler is registered under the
+  // namespaced type "Genesys.ComposableDesktop.SET_INTERACTION" — a bare
+  // "SET_INTERACTION" type is never matched and gets silently dropped.
+  const payload = {
+    type: "Genesys.ComposableDesktop.SET_INTERACTION",
+    data: {
+      contextId: crypto.randomUUID(),
+      componentId: "zapa-crm-copilot",
+      scope: "embedded",
+      id: scopeId,
+      interactionId: interactionId,
+    },
+  };
+  broker.contentWindow.postMessage(JSON.stringify(payload), "https://apps.inindca.com");
+  logMessage("sent", payload);
   showToast(`Sent interaction ${interactionId} to Genesys Copilot.`);
 }
 
@@ -383,27 +377,6 @@ window.addEventListener("message", event => {
     try { msg = JSON.parse(msg); } catch (e) { /* not JSON — leave as string */ }
   }
   logMessage("received", msg);
-
-  // Answer Copilot's GET_INTERACTION_ID poll directly with whatever
-  // interaction ID was last submitted for that scope/id, echoing its
-  // contextId back so Copilot can match the response to its request.
-  if (msg && msg.type === "GET_INTERACTION_ID" && msg.data) {
-    const scopeId = msg.data.id;
-    const interactionId = copilotInteractionIds[scopeId];
-    if (interactionId && event.source) {
-      const reply = {
-        type: "GET_INTERACTION_ID",
-        data: {
-          contextId: msg.data.contextId,
-          scope: msg.data.scope,
-          id: scopeId,
-          interactionId: interactionId,
-        },
-      };
-      event.source.postMessage(JSON.stringify(reply), event.origin || "https://apps.inindca.com");
-      logMessage("sent", reply);
-    }
-  }
 
   if (!msg || msg.source !== "zapa-crm-genesys-framework") return;
   const isInteractionUpdate = msg.type === "Interaction" && msg.interactionId;

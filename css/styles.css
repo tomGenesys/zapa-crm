@@ -272,6 +272,7 @@ a:hover { text-decoration: underline; }
 .obj-icon.opportunity { background: #f4bc44; color: #4a3b06; }
 .obj-icon.task { background: #7f8de1; }
 .obj-icon.report { background: #4fb3a9; }
+.obj-icon.case { background: #c23934; }
 
 /* ============ List view ============ */
 .list-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -298,6 +299,8 @@ table.data-table tr:hover td { background: #f7f9fc; }
 .badge-won { background: var(--sf-success-bg); color: var(--sf-success); }
 .badge-lost { background: var(--sf-error-bg); color: var(--sf-error); }
 .badge-open { background: #eef4fb; color: #0176d3; }
+.badge-escalated { background: var(--sf-error-bg); color: var(--sf-error); }
+.badge-closed { background: #f1f0f0; color: var(--sf-text-secondary); }
 
 /* ============ Record detail ============ */
 .record-header {

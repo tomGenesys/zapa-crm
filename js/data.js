@@ -48,6 +48,31 @@ for (let i = 0; i < 24; i++) {
   });
 }
 
+const CASE_SUBJECTS = ["Unable to log in to portal", "Billing discrepancy on invoice", "Feature request: bulk export", "API integration error", "Password reset not working", "Invoice correction needed", "Performance degradation reported", "Data sync failure overnight", "Account access permissions issue", "Mobile app crashing on launch", "SSO configuration assistance", "Refund request for duplicate charge", "Duplicate contact records found", "Email notifications not sending", "Upgrade license tier", "Onboarding assistance needed", "Report export failing", "Two-factor authentication issue", "Contract renewal question", "Service outage reported"];
+const CASE_STATUSES = ["New", "Working", "Escalated", "Closed"];
+const CASE_PRIORITIES = ["Low", "Medium", "High"];
+const CASE_ORIGINS = ["Phone", "Email", "Web", "Chat"];
+
+const CASES = CASE_SUBJECTS.map((subject, i) => {
+  const acct = ACCOUNTS[i % ACCOUNTS.length];
+  const acctContacts = getContactsForAccount(acct.id);
+  const contact = acctContacts[i % acctContacts.length] || CONTACTS[i % CONTACTS.length];
+  return {
+    id: `CS-${5001 + i}`,
+    subject,
+    accountId: acct.id,
+    accountName: acct.name,
+    contactId: contact.id,
+    contactName: contact.name,
+    status: CASE_STATUSES[i % CASE_STATUSES.length],
+    priority: rand(CASE_PRIORITIES),
+    origin: rand(CASE_ORIGINS),
+    owner: rand(OWNERS),
+    createdDate: new Date(2026, 8, (i % 27) + 1).toISOString(),
+    description: `Customer reported: ${subject.toLowerCase()}.`,
+  };
+});
+
 const LEAD_SOURCES = ["Web", "Referral", "Trade Show", "Cold Call", "Partner", "Advertisement"];
 const LEAD_STATUSES = ["New", "Working", "Qualified", "Unqualified"];
 const LEAD_COMPANIES = ["Acme Robotics", "BrightPath Learning", "Cedarwood Realty", "Delta Freight", "Everest Consulting", "Falcon Security", "Granite Capital", "Harbor Point Systems", "Ivory Coast Apparel", "Juniper Wellness", "Keystone Analytics", "Lumen Software", "Meridian Foods", "Novak Steel", "Orbit Telecom", "Palisade Legal", "Quantum Retail", "Riverside Motors", "Summit Health", "Trailhead Media", "Union Square Bank", "Vanguard Aero", "Westfield Goods", "Yonder Travel", "Zenith Robotics"];

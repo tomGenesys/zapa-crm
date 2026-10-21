@@ -10,6 +10,7 @@ const ICONS = {
   account: `<path fill="currentColor" d="M3 3h8v14H3V3Zm10 5h6v9h-6V8ZM5 6h2M5 9h2M5 12h2M9 6h2M9 9h2M9 12h2M15 11h2M15 14h2"/>`,
   contact: `<path fill="currentColor" d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-3.9 0-7 2-7 4.5V18h14v-1.5c0-2.5-3.1-4.5-7-4.5Z"/>`,
   lead: `<path fill="currentColor" d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-3.9 0-7 2-7 4.5V18h9v-2.6c0-1.4.5-2.6 1.3-3.6A10.6 10.6 0 0 0 10 12Zm6.5 0-1.1 1.1L17 14.6H12v1.6h5l-1.6 1.6L16.5 19l4-3.5-4-3.5Z"/>`,
+  case: `<path fill="currentColor" d="M7 3h6a2 2 0 0 1 2 2v1h2a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a1 1 0 0 1 1-1h2V5a2 2 0 0 1 2-2Zm0 2v1h6V5H7ZM4 8v9h12V8H4Z"/>`,
   opportunity: `<path fill="currentColor" d="M10 1 3 10l7 9 7-9-7-9Zm0 3.1L14.9 10 10 15.9 5.1 10 10 4.1Z"/>`,
   report: `<path fill="currentColor" d="M3 13h3v5H3v-5Zm5-6h3v11H8V7Zm5-4h3v15h-3V3Z"/>`,
   parking: `<rect x="2" y="2" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="10" y="14.5" font-size="11" text-anchor="middle" fill="currentColor" font-family="Arial" font-weight="700">P</text>`,
@@ -38,6 +39,7 @@ const TABS = [
   { key: "home", label: "Home", icon: "home" },
   { key: "accounts", label: "Accounts", icon: "account" },
   { key: "contacts", label: "Contacts", icon: "contact" },
+  { key: "cases", label: "Cases", icon: "case" },
   { key: "leads", label: "Leads", icon: "lead" },
   { key: "opportunities", label: "Opportunities", icon: "opportunity" },
   { key: "reports", label: "Reports", icon: "report" },
@@ -152,6 +154,7 @@ function render() {
     case "home": main.innerHTML = renderHome(); wireHome(); break;
     case "accounts": id ? renderAccountDetail(id) : renderAccountsList(); break;
     case "contacts": id ? renderContactDetail(id) : renderContactsList(); break;
+    case "cases": id ? renderCaseDetail(id) : renderCasesList(); break;
     case "leads": id ? renderLeadDetail(id) : renderLeadsList(); break;
     case "opportunities": id ? renderOpportunityDetail(id) : renderOpportunitiesPage(); break;
     case "reports": renderReports(); break;
@@ -171,6 +174,7 @@ function wireGlobalUI() {
   document.getElementById("btn-notif").addEventListener("click", () => showToast("You have 3 unread notifications."));
   document.getElementById("btn-new").addEventListener("click", () => openNewMenu());
   document.getElementById("btn-genesys").addEventListener("click", () => toggleGenesysPanel());
+  document.getElementById("btn-setup").addEventListener("click", () => openGenesysUrlSettingsModal());
   document.getElementById("genesys-panel-close").addEventListener("click", () => closeGenesysPanel());
   window.addEventListener("resize", () => {
     if (document.getElementById("genesys-panel").classList.contains("open")) positionGenesysPanel();
@@ -280,6 +284,7 @@ function renderGlobalSearchResults(query) {
   const results = [
     ...ACCOUNTS.filter(a => a.name.toLowerCase().includes(q)).slice(0, 4).map(a => ({ type: "account", id: a.id, label: a.name, sub: a.industry })),
     ...CONTACTS.filter(c => c.name.toLowerCase().includes(q)).slice(0, 4).map(c => ({ type: "contact", id: c.id, label: c.name, sub: c.accountName })),
+    ...CASES.filter(c => c.subject.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)).slice(0, 4).map(c => ({ type: "case", id: c.id, label: c.subject, sub: c.accountName })),
     ...LEADS.filter(l => l.name.toLowerCase().includes(q) || l.company.toLowerCase().includes(q)).slice(0, 4).map(l => ({ type: "lead", id: l.id, label: l.name, sub: l.company })),
     ...OPPORTUNITIES.filter(o => o.name.toLowerCase().includes(q)).slice(0, 4).map(o => ({ type: "opportunity", id: o.id, label: o.name, sub: fmtMoney(o.amount) })),
   ];
@@ -312,7 +317,8 @@ function renderGlobalSearchResults(query) {
   searchBoxParent.appendChild(box);
   box.querySelectorAll(".search-result-row").forEach(row => {
     row.addEventListener("mousedown", () => {
-      navigate(`${row.dataset.type === "account" ? "accounts" : row.dataset.type === "contact" ? "contacts" : row.dataset.type === "lead" ? "leads" : "opportunities"}/${row.dataset.id}`);
+      const pages = { account: "accounts", contact: "contacts", case: "cases", lead: "leads", opportunity: "opportunities" };
+      navigate(`${pages[row.dataset.type] || "opportunities"}/${row.dataset.id}`);
       document.getElementById("global-search-input").value = "";
       box.remove();
     });
@@ -328,6 +334,7 @@ function openNewMenu() {
       <button class="btn btn-neutral btn-icon" onclick="openLeadForm()">${objIcon("lead", 22)} New Lead</button>
       <button class="btn btn-neutral btn-icon" onclick="openAccountForm()">${objIcon("account", 22)} New Account</button>
       <button class="btn btn-neutral btn-icon" onclick="openContactForm()">${objIcon("contact", 22)} New Contact</button>
+      <button class="btn btn-neutral btn-icon" onclick="openCaseForm()">${objIcon("case", 22)} New Case</button>
       <button class="btn btn-neutral btn-icon" onclick="openOpportunityForm()">${objIcon("opportunity", 22)} New Opportunity</button>
     </div>
   `);
@@ -357,7 +364,9 @@ function closeModal() {
 /* ---------------- Genesys Cloud embed ---------------- */
 // Private Embeddable Framework deployment — served directly by Genesys Cloud,
 // not by this app. See: https://developer.genesys.cloud/platform/embeddable-framework/
-const GENESYS_EMBEDDABLE_FRAMEWORK_URL = "https://apps.inindca.com/crm/index.html?&crm=embeddableframework&dedicatedLoginWindow=true&enableFrameworkClientId=true";
+// Mutable (not const) — the Setup/gear icon lets the user swap this at
+// runtime to point at a different Embeddable Framework deployment.
+let GENESYS_EMBEDDABLE_FRAMEWORK_URL = "https://apps.inindca.com/crm/index.html?&crm=embeddableframework&dedicatedLoginWindow=true&enableFrameworkClientId=true";
 
 // Composable Desktop component embed — https://developer.genesys.cloud/devapps/composable-desktop/set-up-the-integration
 // scope=embedded + scopeId ties the gadget instance to a specific record in our CRM.
@@ -435,14 +444,20 @@ function sendInteractionToComposableDesktop(scopeId, interactionId) {
   });
 }
 
+// Looks up whichever record (Lead or Case) owns this scopeId — the two
+// object types share the same scoped-gadget pattern, just different arrays.
+function findScopedRecord(scopeId) {
+  return LEADS.find(r => r.id === scopeId) || CASES.find(r => r.id === scopeId);
+}
+
 // Called once registration completes, in case the user is already sitting
-// on a lead with a stored interaction ID that couldn't be sent yet.
+// on a lead/case with a stored interaction ID that couldn't be sent yet.
 function trySendCurrentLeadInteraction() {
   const { page, id } = currentRoute();
-  if (page !== "leads" || !id) return;
-  const lead = LEADS.find(l => l.id === id);
-  if (lead && lead.genesysInteractionId) {
-    sendInteractionToComposableDesktop(lead.id, lead.genesysInteractionId);
+  if ((page !== "leads" && page !== "cases") || !id) return;
+  const record = findScopedRecord(id);
+  if (record && record.genesysInteractionId) {
+    sendInteractionToComposableDesktop(record.id, record.genesysInteractionId);
   }
 }
 
@@ -451,17 +466,17 @@ function submitCopilotInteractionId(scopeId) {
   const interactionId = extractInteractionIdFromInput(input.value.trim());
   if (!interactionId) return;
   input.value = interactionId;
-  // Persist on the lead record — reopening this lead later re-sends
-  // exactly this ID, independent of whatever other leads were viewed.
-  const lead = LEADS.find(l => l.id === scopeId);
-  if (lead) lead.genesysInteractionId = interactionId;
+  // Persist on the record itself — reopening it later re-sends exactly
+  // this ID, independent of whatever other leads/cases were viewed.
+  const record = findScopedRecord(scopeId);
+  if (record) record.genesysInteractionId = interactionId;
   if (!composableDesktopRegistered) {
     showToast("Still connecting to Genesys Cloud — retrying, try Enter again in a second.");
     composableDesktopGetStatus();
     return;
   }
   sendInteractionToComposableDesktop(scopeId, interactionId);
-  showToast(`Sent interaction ${interactionId} to Genesys Copilot and Email.`);
+  showToast(`Sent interaction ${interactionId} to Genesys Cloud gadgets.`);
 }
 
 function toggleGenesysPanel() {
@@ -487,6 +502,41 @@ function openGenesysPanel() {
 
 function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
+}
+
+// Settings (gear icon) — lets the demo point the Genesys Cloud popover at a
+// different Embeddable Framework deployment without editing source.
+function openGenesysUrlSettingsModal() {
+  openModal(`
+    <div class="modal-header"><h2>Genesys Cloud Embeddable Framework</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Embeddable Framework URL</label>
+        <input id="f-genesys-url" style="width:100%;" value="${esc(GENESYS_EMBEDDABLE_FRAMEWORK_URL)}"/>
+      </div>
+      <div style="font-size:12px;color:var(--sf-text-secondary);margin-top:4px;">
+        This is the URL currently rendered inside the Genesys Cloud popover (headset icon). Paste a different deployment URL here to switch it, e.g.
+        <code>https://apps.inindca.com/crm/CWC-7459-work-automation-phase2/index.html</code>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-neutral" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGenesysUrlSetting()">Save</button>
+    </div>
+  `);
+}
+
+function saveGenesysUrlSetting() {
+  const input = document.getElementById("f-genesys-url");
+  const url = input.value.trim();
+  if (!url) { showToast("URL is required.", "error"); return; }
+  GENESYS_EMBEDDABLE_FRAMEWORK_URL = url;
+  // If the panel's iframe is already mounted, reload it in place with the
+  // new URL rather than waiting for the next open.
+  const existingIframe = document.querySelector("#genesys-panel-body iframe");
+  if (existingIframe) existingIframe.src = url;
+  closeModal();
+  showToast("Genesys Cloud Embeddable Framework URL updated.");
 }
 
 // Receives the relayed Interaction/Notification events from framework.js
@@ -969,6 +1019,176 @@ function convertLead(id) {
   l.converted = true;
   showToast(`Lead converted: ${l.name} → Account, Contact & Opportunity created.`);
   navigate(`accounts/${acctId}`);
+}
+
+/* ================= CASES ================= */
+function caseStatusBadge(status) {
+  const cls = { New: "badge-new", Working: "badge-working", Escalated: "badge-escalated", Closed: "badge-closed" }[status] || "badge-new";
+  return `<span class="badge ${cls}">${esc(status)}</span>`;
+}
+function casePriorityBadge(priority) {
+  const cls = { High: "badge-escalated", Medium: "badge-working", Low: "badge-closed" }[priority] || "badge-closed";
+  return `<span class="badge ${cls}">${esc(priority)}</span>`;
+}
+
+function renderCasesList() {
+  const main = document.getElementById("main-content");
+  const openCases = CASES.filter(c => c.status !== "Closed");
+  main.innerHTML = `
+    ${listToolbar("Cases", "case", openCases.length, "Case", "openCaseForm()", "case-search")}
+    <div class="card">
+      <table class="data-table" id="cases-table">
+        <thead><tr><th>Case Number</th><th>Subject</th><th>Account</th><th>Status</th><th>Priority</th><th>Owner</th></tr></thead>
+        <tbody>
+          ${openCases.map(c => `
+            <tr data-row>
+              <td><div class="row-name-cell">${objIcon("case", 24)}<a data-nav="cases/${c.id}">${esc(c.id)}</a></div></td>
+              <td>${esc(c.subject)}</td>
+              <td>${esc(c.accountName)}</td>
+              <td>${caseStatusBadge(c.status)}</td>
+              <td>${casePriorityBadge(c.priority)}</td>
+              <td>${esc(c.owner)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+  wireRowNav();
+  wireListSearch("case-search", "#cases-table tbody tr", (row, q) => row.textContent.toLowerCase().includes(q));
+}
+
+function renderCaseDetail(id) {
+  const c = CASES.find(x => x.id === id);
+  const main = document.getElementById("main-content");
+  if (!c) { main.innerHTML = `<div class="empty-state">Case not found.</div>`; return; }
+  main.innerHTML = `
+    <div class="breadcrumb"><a data-nav="cases">Cases</a> &rsaquo; ${esc(c.id)}</div>
+    <div class="record-header">
+      <div class="record-header-top">
+        ${objIcon("case", 42)}
+        <div class="record-title-block">
+          <div class="eyebrow">Case ${c.id}</div>
+          <h1>${esc(c.subject)}</h1>
+        </div>
+        <div class="record-actions">
+          <button class="btn btn-neutral btn-sm">Edit</button>
+          ${c.status !== "Closed" ? `<button class="btn btn-primary btn-sm" onclick="closeCase('${c.id}')">Close Case</button>` : ""}
+        </div>
+      </div>
+      <div class="record-fields-grid">
+        <div class="field-block"><div class="field-label">Account</div><div class="field-value"><a data-nav="accounts/${c.accountId}">${esc(c.accountName)}</a></div></div>
+        <div class="field-block"><div class="field-label">Contact</div><div class="field-value"><a data-nav="contacts/${c.contactId}">${esc(c.contactName)}</a></div></div>
+        <div class="field-block"><div class="field-label">Status</div><div class="field-value">${caseStatusBadge(c.status)}</div></div>
+        <div class="field-block"><div class="field-label">Priority</div><div class="field-value">${casePriorityBadge(c.priority)}</div></div>
+        <div class="field-block"><div class="field-label">Origin</div><div class="field-value">${esc(c.origin)}</div></div>
+        <div class="field-block"><div class="field-label">Owner</div><div class="field-value">${esc(c.owner)}</div></div>
+        <div class="field-block"><div class="field-label">Date Opened</div><div class="field-value">${fmtDate(c.createdDate)}</div></div>
+        <div class="field-block">
+          <div class="field-label">Genesys Cloud Interaction ID</div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="copilot-interaction-id" placeholder="e.g. 8f2a1c3e-..." style="flex:1;"
+              value="${esc(c.genesysInteractionId || "")}"
+              onkeydown="if(event.key==='Enter'){submitCopilotInteractionId('${c.id}')}"/>
+            <button class="btn btn-primary btn-sm" onclick="submitCopilotInteractionId('${c.id}')">Enter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2>Description</h2></div>
+      <div class="card-body">${esc(c.description)}</div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div class="card" style="width:332px;">
+        <div class="card-header"><h2>Work Item Details</h2></div>
+        <div class="card-body" style="padding:0;">
+          <iframe id="workitem-details-iframe" src="${composableDesktopComponentUrl("workItemDetails", c.id, "small")}" title="Genesys Cloud Work Item Details"
+            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+            style="width:300px;min-height:500px;border:0;display:block;"></iframe>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div class="card collapsible-card collapsed" id="workitem-status-gadget-card" style="width:800px;">
+          <div class="card-header" onclick="toggleCollapsibleCard('workitem-status-gadget-card')">
+            <h2>Work Item Status</h2>
+            <span class="collapsible-chevron">&#9650;</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <iframe id="workitem-status-iframe" src="${composableDesktopComponentUrl("workItemStatus", c.id, "small")}" title="Genesys Cloud Work Item Status"
+              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
+          </div>
+        </div>
+        <div class="card collapsible-card collapsed" id="workitem-wrapup-gadget-card" style="width:800px;">
+          <div class="card-header" onclick="toggleCollapsibleCard('workitem-wrapup-gadget-card')">
+            <h2>Work Item Wrap-Up</h2>
+            <span class="collapsible-chevron">&#9650;</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <iframe id="workitem-wrapup-iframe" src="${composableDesktopComponentUrl("workItemWrapUp", c.id, "small")}" title="Genesys Cloud Work Item Wrap-Up"
+              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  wireRowNav();
+  if (c.genesysInteractionId) sendInteractionToComposableDesktop(c.id, c.genesysInteractionId);
+}
+
+function closeCase(id) {
+  const c = CASES.find(x => x.id === id);
+  if (!c) return;
+  c.status = "Closed";
+  showToast(`Case ${c.id} closed.`);
+  renderCaseDetail(id);
+}
+
+function openCaseForm() {
+  openModal(`
+    <div class="modal-header"><h2>New Case</h2><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row"><label>Subject*</label><input id="f-subject" placeholder="Unable to log in"/></div>
+      <div class="form-row"><label>Account*</label>
+        <select id="f-case-account">${ACCOUNTS.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select>
+      </div>
+      <div class="form-row"><label>Priority</label>
+        <select id="f-priority">${CASE_PRIORITIES.map(p => `<option>${p}</option>`).join("")}</select>
+      </div>
+      <div class="form-row"><label>Origin</label>
+        <select id="f-origin">${CASE_ORIGINS.map(o => `<option>${o}</option>`).join("")}</select>
+      </div>
+      <div class="form-row"><label>Description</label><textarea id="f-case-desc" rows="3" placeholder="Describe the issue..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-neutral" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitCaseForm()">Save</button>
+    </div>
+  `);
+}
+function submitCaseForm() {
+  const subject = document.getElementById("f-subject").value.trim();
+  const acctId = document.getElementById("f-case-account").value;
+  if (!subject || !acctId) { showToast("Subject and Account are required.", "error"); return; }
+  const acct = getAccount(acctId);
+  const acctContacts = getContactsForAccount(acctId);
+  const contact = acctContacts[0];
+  const id = `CS-${5000 + CASES.length + 1}`;
+  CASES.unshift({
+    id, subject,
+    accountId: acctId, accountName: acct ? acct.name : "-",
+    contactId: contact ? contact.id : "-", contactName: contact ? contact.name : "-",
+    status: "New",
+    priority: document.getElementById("f-priority").value,
+    origin: document.getElementById("f-origin").value,
+    owner: "Thomas Prendergast",
+    createdDate: new Date().toISOString(),
+    description: document.getElementById("f-case-desc").value.trim() || "-",
+  });
+  closeModal();
+  showToast(`Case "${subject}" created.`);
+  navigate(`cases/${id}`);
 }
 
 /* ================= OPPORTUNITIES ================= */

@@ -12,6 +12,7 @@ const ICONS = {
   lead: `<path fill="currentColor" d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-3.9 0-7 2-7 4.5V18h9v-2.6c0-1.4.5-2.6 1.3-3.6A10.6 10.6 0 0 0 10 12Zm6.5 0-1.1 1.1L17 14.6H12v1.6h5l-1.6 1.6L16.5 19l4-3.5-4-3.5Z"/>`,
   opportunity: `<path fill="currentColor" d="M10 1 3 10l7 9 7-9-7-9Zm0 3.1L14.9 10 10 15.9 5.1 10 10 4.1Z"/>`,
   report: `<path fill="currentColor" d="M3 13h3v5H3v-5Zm5-6h3v11H8V7Zm5-4h3v15h-3V3Z"/>`,
+  parking: `<rect x="2" y="2" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="10" y="14.5" font-size="11" text-anchor="middle" fill="currentColor" font-family="Arial" font-weight="700">P</text>`,
   task: `<path fill="currentColor" d="M8.5 13.5 5 10l-1.5 1.5L8.5 16.5 17 8l-1.5-1.5L8.5 13.5Z"/>`,
   search: `<path fill="currentColor" d="M13.6 12.2h-.7l-.6-.5a5.4 5.4 0 1 0-1.3 1.3l.5.6v.7L16 18.6 17.6 17l-4-4Zm-8.6 0a3.8 3.8 0 1 1 0-7.6 3.8 3.8 0 0 1 0 7.6Z"/>`,
   chevronDown: `<path fill="currentColor" d="M5 7l5 5 5-5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
@@ -40,6 +41,7 @@ const TABS = [
   { key: "leads", label: "Leads", icon: "lead" },
   { key: "opportunities", label: "Opportunities", icon: "opportunity" },
   { key: "reports", label: "Reports", icon: "report" },
+  { key: "parking", label: "Parking", icon: "parking" },
 ];
 
 let oppView = "kanban"; // or 'list'
@@ -153,6 +155,7 @@ function render() {
     case "leads": id ? renderLeadDetail(id) : renderLeadsList(); break;
     case "opportunities": id ? renderOpportunityDetail(id) : renderOpportunitiesPage(); break;
     case "reports": renderReports(); break;
+    case "parking": renderParkingPage(); break;
     default: main.innerHTML = `<div class="empty-state">Page not found.</div>`;
   }
 }
@@ -362,6 +365,12 @@ function composableDesktopComponentUrl(component, scopeId, size) {
   return `https://apps.inindca.com/crm-embeddable-desktop/component.html#/${component}?size=${size || "small"}&scope=embedded&scopeId=${encodeURIComponent(scopeId)}`;
 }
 
+// Page-level gadgets (not tied to a specific CRM record) use scope=default
+// — no scopeId, per https://developer.genesys.cloud/devapps/composable-desktop/examples
+function composableDesktopDefaultScopeUrl(component, size) {
+  return `https://apps.inindca.com/crm-embeddable-desktop/component.html#/${component}?size=${size || "fluid"}&scope=default`;
+}
+
 // If a full URL got pasted in (e.g. copied from the Genesys Cloud UI),
 // pull out the trailing GUID instead of sending the whole URL as the ID.
 function extractInteractionIdFromInput(value) {
@@ -409,25 +418,49 @@ function composableDesktopRegister() {
   });
 }
 
-function submitCopilotInteractionId(scopeId) {
-  const input = document.getElementById("copilot-interaction-id");
-  const interactionId = extractInteractionIdFromInput(input.value.trim());
+// scope="embedded" + id=scopeId is a shared cache key on the Broker's side
+// — one SET_INTERACTION here reaches every embedded gadget scoped to this
+// same lead (Copilot, Email, Messenger), no per-gadget targeting needed.
+function sendInteractionToComposableDesktop(scopeId, interactionId) {
   if (!interactionId) return;
-  input.value = interactionId;
   if (!composableDesktopRegistered) {
-    showToast("Still connecting to Genesys Cloud — retrying, try Enter again in a second.");
     composableDesktopGetStatus();
     return;
   }
-  // scope="embedded" + id=scopeId is a shared cache key on the Broker's
-  // side — one SET_INTERACTION here reaches every embedded gadget scoped
-  // to this same lead (Copilot and Email), no per-gadget targeting needed.
   postToBroker("Genesys.ComposableDesktop.SET_INTERACTION", {
     componentId: COMPOSABLE_DESKTOP_COMPONENT_ID,
     scope: "embedded",
     id: scopeId,
     interactionId: interactionId,
   });
+}
+
+// Called once registration completes, in case the user is already sitting
+// on a lead with a stored interaction ID that couldn't be sent yet.
+function trySendCurrentLeadInteraction() {
+  const { page, id } = currentRoute();
+  if (page !== "leads" || !id) return;
+  const lead = LEADS.find(l => l.id === id);
+  if (lead && lead.genesysInteractionId) {
+    sendInteractionToComposableDesktop(lead.id, lead.genesysInteractionId);
+  }
+}
+
+function submitCopilotInteractionId(scopeId) {
+  const input = document.getElementById("copilot-interaction-id");
+  const interactionId = extractInteractionIdFromInput(input.value.trim());
+  if (!interactionId) return;
+  input.value = interactionId;
+  // Persist on the lead record — reopening this lead later re-sends
+  // exactly this ID, independent of whatever other leads were viewed.
+  const lead = LEADS.find(l => l.id === scopeId);
+  if (lead) lead.genesysInteractionId = interactionId;
+  if (!composableDesktopRegistered) {
+    showToast("Still connecting to Genesys Cloud — retrying, try Enter again in a second.");
+    composableDesktopGetStatus();
+    return;
+  }
+  sendInteractionToComposableDesktop(scopeId, interactionId);
   showToast(`Sent interaction ${interactionId} to Genesys Copilot and Email.`);
 }
 
@@ -471,6 +504,7 @@ window.addEventListener("message", event => {
   if (msg && typeof msg.type === "string" && msg.type.startsWith("Genesys.ComposableDesktop")) {
     if (msg.type === "Genesys.ComposableDesktop.REGISTRATION_RESPONSE") {
       composableDesktopRegistered = true;
+      trySendCurrentLeadInteraction();
     } else if (msg.type === "Genesys.ComposableDesktop.STATUS_UPDATE") {
       const contextId = msg.data && msg.data.contextId;
       if (contextId === "handshake" || contextId === "initial") {
@@ -876,6 +910,7 @@ function renderLeadDetail(id) {
           <div class="field-label">Genesys Cloud Interaction ID</div>
           <div style="display:flex;gap:6px;">
             <input type="text" id="copilot-interaction-id" placeholder="e.g. 8f2a1c3e-..." style="flex:1;"
+              value="${esc(l.genesysInteractionId || "")}"
               onkeydown="if(event.key==='Enter'){submitCopilotInteractionId('${l.id}')}"/>
             <button class="btn btn-primary btn-sm" onclick="submitCopilotInteractionId('${l.id}')">Enter</button>
           </div>
@@ -918,6 +953,7 @@ function renderLeadDetail(id) {
     </div>
   `;
   wireRowNav();
+  if (l.genesysInteractionId) sendInteractionToComposableDesktop(l.id, l.genesysInteractionId);
 }
 
 function convertLead(id) {
@@ -1097,6 +1133,17 @@ function renderReports() {
         </div>
       </div>
     </div>
+  `;
+}
+
+/* ================= PARKING ================= */
+function renderParkingPage() {
+  const main = document.getElementById("main-content");
+  main.innerHTML = `
+    <div class="page-title-row"><div class="page-title">${objIcon("parking", 32)}<h1>Parking</h1></div></div>
+    <iframe id="parking-iframe" src="${composableDesktopDefaultScopeUrl("workItemsList", "fluid")}" title="Genesys Cloud Work Items"
+      allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+      style="width:100%;min-height:700px;border:0;display:block;"></iframe>
   `;
 }
 

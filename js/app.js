@@ -1107,28 +1107,20 @@ function renderCaseDetail(id) {
             style="width:300px;min-height:500px;border:0;display:block;"></iframe>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <div class="card collapsible-card collapsed" id="workitem-status-gadget-card" style="width:800px;">
-          <div class="card-header" onclick="toggleCollapsibleCard('workitem-status-gadget-card')">
-            <h2>Work Item Status</h2>
-            <span class="collapsible-chevron">&#9650;</span>
-          </div>
-          <div class="card-body" style="padding:0;">
-            <iframe id="workitem-status-iframe" src="${composableDesktopComponentUrl("workItemStatus", c.id, "small")}" title="Genesys Cloud Work Item Status"
-              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
-              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
-          </div>
+      <div class="card" style="width:332px;">
+        <div class="card-header"><h2>Work Item Status</h2></div>
+        <div class="card-body" style="padding:0;">
+          <iframe id="workitem-status-iframe" src="${composableDesktopComponentUrl("workItemStatus", c.id, "small")}" title="Genesys Cloud Work Item Status"
+            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+            style="width:300px;min-height:500px;border:0;display:block;"></iframe>
         </div>
-        <div class="card collapsible-card collapsed" id="workitem-wrapup-gadget-card" style="width:800px;">
-          <div class="card-header" onclick="toggleCollapsibleCard('workitem-wrapup-gadget-card')">
-            <h2>Work Item Wrap-Up</h2>
-            <span class="collapsible-chevron">&#9650;</span>
-          </div>
-          <div class="card-body" style="padding:0;">
-            <iframe id="workitem-wrapup-iframe" src="${composableDesktopComponentUrl("workItemWrapUp", c.id, "small")}" title="Genesys Cloud Work Item Wrap-Up"
-              allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
-              style="width:800px;min-height:500px;border:0;display:block;"></iframe>
-          </div>
+      </div>
+      <div class="card" style="width:332px;">
+        <div class="card-header"><h2>Work Item Wrap-Up</h2></div>
+        <div class="card-body" style="padding:0;">
+          <iframe id="workitem-wrapup-iframe" src="${composableDesktopComponentUrl("workItemWrapUp", c.id, "small")}" title="Genesys Cloud Work Item Wrap-Up"
+            allow="camera *; microphone *; autoplay *; hid *; local-network-access *"
+            style="width:300px;min-height:500px;border:0;display:block;"></iframe>
         </div>
       </div>
     </div>

@@ -494,24 +494,28 @@ function openGenesysPanel() {
     iframe.title = "Genesys Cloud Embeddable Framework";
     iframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *; local-network-access *");
     body.appendChild(iframe);
-
-    // Step 5 of the Private Deployment guide — the interaction window sits
-    // right next to the embedded client icon frame.
-    // https://developer.genesys.cloud/platform/embeddable-framework/deployments/private-deployment
+  }
+  // Step 5 of the Private Deployment guide — the interaction window gets
+  // its own popover, to the left of the Embeddable Framework one, opened
+  // and closed in sync with it.
+  // https://developer.genesys.cloud/platform/embeddable-framework/deployments/private-deployment
+  const interactionBody = document.getElementById("genesys-interaction-panel-body");
+  if (!interactionBody.querySelector("iframe")) {
     const interactionIframe = document.createElement("iframe");
-    interactionIframe.id = "genesys-interaction-iframe";
     interactionIframe.title = "Genesys Cloud Interaction Window";
     interactionIframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *");
     interactionIframe.src = "https://apps.inindca.com/crm/interaction.html";
-    body.appendChild(interactionIframe);
+    interactionBody.appendChild(interactionIframe);
   }
   positionGenesysPanel();
   panel.classList.add("open");
+  document.getElementById("genesys-interaction-panel").classList.add("open");
   screenPopLead("David Brown");
 }
 
 function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
+  document.getElementById("genesys-interaction-panel").classList.remove("open");
 }
 
 // Settings (gear icon) — lets the demo point the Genesys Cloud popover at a
@@ -606,6 +610,15 @@ function positionGenesysPanel() {
   panel.style.left = left + "px";
   panel.style.top = (rect.bottom + 8) + "px";
   arrow.style.left = (rect.left + rect.width / 2 - left - 7) + "px";
+
+  // Interaction popover sits immediately to the left of the main panel,
+  // same top, with a small gap — clamped so it never runs off-screen.
+  const interactionPanel = document.getElementById("genesys-interaction-panel");
+  const interactionWidth = interactionPanel.offsetWidth || 200;
+  const gap = 8;
+  const interactionLeft = Math.max(8, left - interactionWidth - gap);
+  interactionPanel.style.left = interactionLeft + "px";
+  interactionPanel.style.top = panel.style.top;
 }
 
 function toggleBrokerPanel() {

@@ -494,6 +494,16 @@ function openGenesysPanel() {
     iframe.title = "Genesys Cloud Embeddable Framework";
     iframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *; local-network-access *");
     body.appendChild(iframe);
+
+    // Step 5 of the Private Deployment guide — the interaction window sits
+    // right next to the embedded client icon frame.
+    // https://developer.genesys.cloud/platform/embeddable-framework/deployments/private-deployment
+    const interactionIframe = document.createElement("iframe");
+    interactionIframe.id = "genesys-interaction-iframe";
+    interactionIframe.title = "Genesys Cloud Interaction Window";
+    interactionIframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *");
+    interactionIframe.src = "https://apps.inindca.com/crm/interaction.html";
+    body.appendChild(interactionIframe);
   }
   positionGenesysPanel();
   panel.classList.add("open");

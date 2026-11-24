@@ -476,6 +476,50 @@ table.data-table tr:hover td { background: #f7f9fc; }
 .genesys-panel-body { flex: 1 1 auto; }
 .genesys-panel-body iframe { width: 100%; height: 100%; border: 0; display: block; }
 
+/* Agent Copilot popover (sparkle icon beside "+") — same popover pattern
+   as the Genesys Cloud panel, just a bit wider for Copilot's content. */
+.agent-copilot-panel {
+  position: fixed;
+  width: 320px;
+  height: 500px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--shadow-2);
+  z-index: 150;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.agent-copilot-panel.open { display: flex; }
+.agent-copilot-panel-arrow {
+  position: absolute;
+  top: -6px;
+  width: 14px;
+  height: 14px;
+  background: var(--sf-header-bg);
+  transform: rotate(45deg);
+  border-radius: 2px;
+}
+.agent-copilot-panel-header {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  background: linear-gradient(180deg, var(--sf-header-bg) 0%, var(--sf-header-bg-2) 100%);
+  color: #fff;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.agent-copilot-panel-header h2 { margin: 0; font-size: 14px; font-weight: 700; }
+.agent-copilot-panel-close {
+  background: transparent; border: none; color: #fff; font-size: 16px; line-height: 1;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px;
+}
+.agent-copilot-panel-close:hover { background: rgba(255,255,255,.15); }
+.agent-copilot-panel-body { flex: 1 1 auto; }
+.agent-copilot-panel-body iframe { width: 100%; height: 100%; border: 0; display: block; }
+
 /* ============ Message Log (footer) ============ */
 .message-log {
   flex: 0 0 auto;

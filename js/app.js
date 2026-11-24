@@ -173,6 +173,11 @@ function wireGlobalUI() {
   });
   document.getElementById("btn-notif").addEventListener("click", () => showToast("You have 3 unread notifications."));
   document.getElementById("btn-new").addEventListener("click", () => openNewMenu());
+  document.getElementById("btn-agent-copilot").addEventListener("click", () => toggleAgentCopilotPanel());
+  document.getElementById("agent-copilot-panel-close").addEventListener("click", () => closeAgentCopilotPanel());
+  window.addEventListener("resize", () => {
+    if (document.getElementById("agent-copilot-panel").classList.contains("open")) positionAgentCopilotPanel();
+  });
   document.getElementById("btn-genesys").addEventListener("click", () => toggleGenesysPanel());
   document.getElementById("btn-setup").addEventListener("click", () => openGenesysUrlSettingsModal());
   document.getElementById("genesys-panel-close").addEventListener("click", () => closeGenesysPanel());
@@ -497,11 +502,50 @@ function openGenesysPanel() {
   }
   positionGenesysPanel();
   panel.classList.add("open");
-  screenPopLead("David Brown");
 }
 
 function closeGenesysPanel() {
   document.getElementById("genesys-panel").classList.remove("open");
+}
+
+// Agent Copilot popover (sparkle icon beside "+") — Composable Desktop
+// Copilot gadget at scope=default: the agent's own current interaction,
+// not tied to any specific Lead/Case record.
+function toggleAgentCopilotPanel() {
+  const panel = document.getElementById("agent-copilot-panel");
+  if (panel.classList.contains("open")) closeAgentCopilotPanel();
+  else openAgentCopilotPanel();
+}
+
+function openAgentCopilotPanel() {
+  const panel = document.getElementById("agent-copilot-panel");
+  const body = document.getElementById("agent-copilot-panel-body");
+  if (!body.querySelector("iframe")) {
+    const iframe = document.createElement("iframe");
+    iframe.src = composableDesktopDefaultScopeUrl("copilot", "small");
+    iframe.title = "Genesys Cloud Copilot";
+    iframe.setAttribute("allow", "camera *; microphone *; autoplay *; hid *; local-network-access *");
+    body.appendChild(iframe);
+  }
+  positionAgentCopilotPanel();
+  panel.classList.add("open");
+}
+
+function closeAgentCopilotPanel() {
+  document.getElementById("agent-copilot-panel").classList.remove("open");
+}
+
+function positionAgentCopilotPanel() {
+  const btn = document.getElementById("btn-agent-copilot");
+  const panel = document.getElementById("agent-copilot-panel");
+  const arrow = document.getElementById("agent-copilot-panel-arrow");
+  const rect = btn.getBoundingClientRect();
+  const panelWidth = panel.offsetWidth || 320;
+  let left = rect.left + rect.width / 2 - panelWidth / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - panelWidth - 8));
+  panel.style.left = left + "px";
+  panel.style.top = (rect.bottom + 8) + "px";
+  arrow.style.left = (rect.left + rect.width / 2 - left - 7) + "px";
 }
 
 // Settings (gear icon) — lets the demo point the Genesys Cloud popover at a
